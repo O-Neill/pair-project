@@ -396,7 +396,6 @@ function startTitleEdit() {
   if (!canEditSelectedItem.value) return
   editTitle.value = selectedItem.value.title
   editingTitle.value = true
-  // focus after DOM update
   setTimeout(() => titleInputRef.value?.focus(), 0)
 }
 
@@ -420,7 +419,7 @@ async function saveTitle() {
     editTitle.value = data.title
     editingTitle.value = false
     const idx = allItems.value.findIndex(i => i.id === data.id)
-    if (idx !== -1) allItems.value[idx] = { ...allItems.value[idx], title: data.title }
+    if (idx !== -1) allItems.value[idx] = { ...allItems.value[idx], title: data.title, risk_level: data.risk_level, customer_tier: data.customer_tier }
   } catch (e) {
     updateError.value = e.message
   } finally {
@@ -602,7 +601,6 @@ async function saveEdits() {
     editRisk.value = data.risk_level
     editTier.value = data.customer_tier
     editSummary.value = data.summary
-    // update the item in the list too
     const idx = allItems.value.findIndex(i => i.id === data.id)
     if (idx !== -1) allItems.value[idx] = data
   } catch (e) {
@@ -630,7 +628,6 @@ async function submitNote() {
     if (!res.ok) throw new Error(data.detail ?? `Server error: ${res.status}`)
     selectedItem.value = data
     newNoteContent.value = ''
-    // update notes_count in list
     const idx = allItems.value.findIndex(i => i.id === data.id)
     if (idx !== -1) allItems.value[idx] = { ...allItems.value[idx], notes_count: data.notes_count }
   } catch (e) {

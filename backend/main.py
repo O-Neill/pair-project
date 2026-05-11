@@ -206,10 +206,6 @@ def escalate_item(item_id: str, db: Session = Depends(get_db)):
     return item_to_detail_dict(item)
 
 
-# ---------------------------------------------------------------------------
-# New routes
-# ---------------------------------------------------------------------------
-
 class CreateItemBody(BaseModel):
     title: str
     risk_level: str
@@ -291,7 +287,7 @@ def add_note(item_id: str, body: AddNoteBody, db: Session = Depends(get_db)):
         item_id=item_id,
         author=body.author,
         content=body.content.strip(),
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(),
     )
     db.add(note)
     db.commit()

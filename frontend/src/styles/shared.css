@@ -1,0 +1,135 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', 'Fira Code', monospace;
+
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-muted: #6b7280;
+
+  --risk-high: #dc2626;
+  --risk-med: #d97706;
+  --risk-low: #16a34a;
+  --tier-priority: #7c3aed;
+  --tier-standard: #6b7280;
+
+  --status-unassigned-bg: #f3f4f6;
+  --status-unassigned-fg: #374151;
+  --status-in_review-bg: #dbeafe;
+  --status-in_review-fg: #1d4ed8;
+  --status-approved-bg: #dcfce7;
+  --status-approved-fg: #15803d;
+  --status-rejected-bg: #fee2e2;
+  --status-rejected-fg: #b91c1c;
+  --status-escalated-bg: #ffedd5;
+  --status-escalated-fg: #c2410c;
+
+  --header-h: 52px;
+}
+
+html, body, #app { height: 100%; }
+
+body { font-family: var(--font); background: var(--bg); color: var(--text); }
+
+.btn {
+  padding: 8px 18px;
+  font-size: .9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity .15s, filter .15s;
+}
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn:not(:disabled):hover { filter: brightness(.92); }
+
+.btn-sm { padding: 5px 12px; font-size: .8rem; }
+
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-success { background: #16a34a; color: #fff; }
+.btn-danger  { background: #dc2626; color: #fff; }
+.btn-warn    { background: #d97706; color: #fff; }
+.btn-secondary { background: #e5e7eb; color: #374151; }
+
+.badge {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: .03em;
+}
+
+.badge-lg { font-size: .8rem; padding: 3px 10px; }
+
+.risk-high     { background: #fee2e2; color: var(--risk-high); }
+.risk-medium   { background: #fef3c7; color: var(--risk-med); }
+.risk-low      { background: #dcfce7; color: var(--risk-low); }
+
+.tier-priority { background: #ede9fe; color: var(--tier-priority); }
+.tier-standard { background: #f3f4f6; color: var(--tier-standard); }
+
+.status-unassigned { background: var(--status-unassigned-bg); color: var(--status-unassigned-fg); }
+.status-in_review  { background: var(--status-in_review-bg);  color: var(--status-in_review-fg); }
+.status-approved   { background: var(--status-approved-bg);   color: var(--status-approved-fg); }
+.status-rejected   { background: var(--status-rejected-bg);   color: var(--status-rejected-fg); }
+.status-escalated  { background: var(--status-escalated-bg);  color: var(--status-escalated-fg); }
+
+.state-msg {
+  padding: 24px;
+  font-size: .9rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.loading-msg { color: #374151; }
+.error-msg   { color: #b91c1c; }
+.empty-msg   { justify-content: center; }
+
+.action-feedback { margin-top: 12px; font-size: .88rem; padding: 8px 12px; border-radius: 6px; }
+.success-feedback { background: #dcfce7; color: #15803d; }
+.error-feedback   { background: #fee2e2; color: #b91c1c; }
+
+.edit-form { display: flex; flex-direction: column; gap: 12px; }
+.edit-row { display: flex; align-items: center; gap: 12px; }
+.edit-row-col { flex-direction: column; align-items: flex-start; gap: 4px; }
+.edit-label { font-size: .75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; min-width: 100px; }
+.edit-select, .edit-input {
+  font-size: .88rem;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  width: 160px;
+}
+.edit-input { width: 100%; }
+.edit-textarea {
+  width: 100%;
+  font-size: .88rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+  font-family: var(--font);
+  line-height: 1.5;
+}
+.edit-actions { display: flex; align-items: center; gap: 10px; }
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d1d5db;
+  border-top-color: #6b7280;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

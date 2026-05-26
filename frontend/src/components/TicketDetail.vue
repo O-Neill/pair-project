@@ -72,6 +72,10 @@
           <span class="meta-label">Notes</span>
           <span class="meta-value">{{ selectedItem.notes_count }}</span>
         </div>
+        <div v-if="selectedItem.closed_reason" class="meta-item meta-item-full">
+          <span class="meta-label">Closed Reason</span>
+          <span class="meta-value">{{ selectedItem.closed_reason }}</span>
+        </div>
       </div>
 
       <!-- Summary -->
@@ -144,14 +148,14 @@
             <button
               class="btn btn-danger"
               :disabled="!!actionLoading"
-              @click="performAction('reject')"
+              @click="openReasonModal('reject')"
             >
               {{ actionLoading === 'reject' ? 'Rejecting…' : 'Reject' }}
             </button>
             <button
               class="btn btn-warn"
               :disabled="!!actionLoading"
-              @click="performAction('escalate')"
+              @click="openReasonModal('escalate')"
             >
               {{ actionLoading === 'escalate' ? 'Escalating…' : 'Escalate' }}
             </button>
@@ -233,6 +237,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Reason modal (reject / escalate) -->
+    <div v-if="showReasonModal" class="modal-backdrop" @click.self="cancelReasonModal">
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <h3 class="modal-title">{{ pendingAction === 'reject' ? 'Reject' : 'Escalate' }} — Add Reason</h3>
+        <p class="modal-description">Provide a reason for traceability. This will be saved with the item.</p>
+        <textarea
+          v-model="reasonText"
+          class="edit-textarea"
+          rows="4"
+          placeholder="Enter reason…"
+          ref="reasonInputRef"
+        ></textarea>
+        <div class="modal-actions">
+          <button
+            class="btn btn-danger"
+            :class="pendingAction === 'escalate' ? 'btn-warn' : 'btn-danger'"
+            :disabled="!reasonText.trim()"
+            @click="confirmReasonModal"
+          >
+            Confirm {{ pendingAction === 'reject' ? 'Rejection' : 'Escalation' }}
+          </button>
+          <button class="btn btn-secondary" @click="cancelReasonModal">Cancel</button>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -271,6 +301,12 @@ const actionLoading = ref(null)
 const actionSuccess = ref(null)
 const actionError = ref(null)
 
+// Reason modal state
+const showReasonModal = ref(false)
+const pendingAction = ref(null)
+const reasonText = ref('')
+const reasonInputRef = ref(null)
+
 // Note state
 const newNoteContent = ref('')
 const noteLoading = ref(false)
@@ -308,6 +344,9 @@ watch(() => props.selectedId, () => {
   newNoteContent.value = ''
   editingTitle.value = false
   editingSummary.value = false
+  showReasonModal.value = false
+  pendingAction.value = null
+  reasonText.value = ''
 })
 
 function isTerminal(status) {
@@ -355,18 +394,42 @@ async function saveTitle() {
   }
 }
 
-async function performAction(action) {
+function openReasonModal(action) {
+  pendingAction.value = action
+  reasonText.value = ''
+  showReasonModal.value = true
+  setTimeout(() => reasonInputRef.value?.focus(), 0)
+}
+
+function cancelReasonModal() {
+  showReasonModal.value = false
+  pendingAction.value = null
+  reasonText.value = ''
+}
+
+function confirmReasonModal() {
+  const action = pendingAction.value
+  const reason = reasonText.value.trim()
+  showReasonModal.value = false
+  pendingAction.value = null
+  reasonText.value = ''
+  performAction(action, reason)
+}
+
+async function performAction(action, closedReason = null) {
   actionLoading.value = action
   actionSuccess.value = null
   actionError.value = null
 
   const url = `${API_BASE}/api/items/${props.selectedId}/${action}`
+  const body = {}
+  if (action === 'claim') body.reviewer = props.reviewer
+  if (closedReason) body.closed_reason = closedReason
+
   const options = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-  }
-  if (action === 'claim') {
-    options.body = JSON.stringify({ reviewer: props.reviewer })
+    body: JSON.stringify(body),
   }
 
   try {
@@ -546,4 +609,34 @@ function formatDateFull(iso) {
 .note-content { font-size: .88rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; }
 .notes-empty { font-size: .88rem; color: var(--text-muted); margin-bottom: 14px; }
 .add-note-form { display: flex; flex-direction: column; gap: 8px; }
+
+.meta-item-full { flex-basis: 100%; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+.modal-description { font-size: .88rem; color: var(--text-muted); margin: 0; }
+
+.modal-actions { display: flex; gap: 10px; }
 </style>

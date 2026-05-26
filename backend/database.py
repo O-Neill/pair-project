@@ -27,6 +27,7 @@ class ReviewItem(Base):
     status = Column(String, nullable=False)          # unassigned | in_review | approved | rejected | escalated
     assigned_reviewer = Column(String, nullable=True)
     summary = Column(String, nullable=False)
+    closed_reason = Column(String, nullable=True)
 
     notes = relationship("Note", back_populates="item", order_by="Note.created_at")
 

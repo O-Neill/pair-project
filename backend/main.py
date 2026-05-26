@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from database import Base, Note, ReviewItem, SessionLocal, engine, seed_database
@@ -24,9 +25,19 @@ VALID_TIERS = {"priority", "standard"}
 # App setup
 # ---------------------------------------------------------------------------
 
+def _run_migrations() -> None:
+    """Apply any schema migrations that create_all won't handle automatically."""
+    with engine.connect() as conn:
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(review_items)"))]
+        if "closed_reason" not in cols:
+            conn.execute(text("ALTER TABLE review_items ADD COLUMN closed_reason TEXT"))
+            conn.commit()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    _run_migrations()
     db = SessionLocal()
     try:
         seed_database(db)
@@ -77,6 +88,7 @@ def item_to_dict(item: ReviewItem) -> dict:
         "assigned_reviewer": item.assigned_reviewer,
         "notes_count": len(item.notes),
         "summary": item.summary,
+        "closed_reason": item.closed_reason,
     }
 
 
@@ -178,8 +190,12 @@ def approve_item(item_id: str, db: Session = Depends(get_db)):
     return item_to_detail_dict(item)
 
 
+class CloseReasonBody(BaseModel):
+    closed_reason: Optional[str] = None
+
+
 @app.post("/api/items/{item_id}/reject")
-def reject_item(item_id: str, db: Session = Depends(get_db)):
+def reject_item(item_id: str, body: CloseReasonBody = CloseReasonBody(), db: Session = Depends(get_db)):
     item = get_or_404(db, item_id)
     if item.status != "in_review":
         raise HTTPException(
@@ -187,13 +203,14 @@ def reject_item(item_id: str, db: Session = Depends(get_db)):
             detail=f"Cannot reject: item is '{item.status}'. Only in-review items can be rejected.",
         )
     item.status = "rejected"
+    item.closed_reason = body.closed_reason
     db.commit()
     db.refresh(item)
     return item_to_detail_dict(item)
 
 
 @app.post("/api/items/{item_id}/escalate")
-def escalate_item(item_id: str, db: Session = Depends(get_db)):
+def escalate_item(item_id: str, body: CloseReasonBody = CloseReasonBody(), db: Session = Depends(get_db)):
     item = get_or_404(db, item_id)
     if item.status != "in_review":
         raise HTTPException(
@@ -201,6 +218,7 @@ def escalate_item(item_id: str, db: Session = Depends(get_db)):
             detail=f"Cannot escalate: item is '{item.status}'. Only in-review items can be escalated.",
         )
     item.status = "escalated"
+    item.closed_reason = body.closed_reason
     db.commit()
     db.refresh(item)
     return item_to_detail_dict(item)
